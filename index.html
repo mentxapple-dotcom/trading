@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Signal Trading AUD/JPY - Auto M5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #e94560;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            color: #e94560;
+            text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+        
+        .header .subtitle {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+        
+        .time-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .time-box .wita-time {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00d9ff;
+            text-shadow: 0 0 15px rgba(0, 217, 255, 0.5);
+        }
+        
+        .time-box .session {
+            font-size: 0.8rem;
+            color: #ffd700;
+            margin-top: 5px;
+        }
+        
+        .countdown {
+            font-size: 1.2rem;
+            color: #ff6b6b;
+            margin-top: 8px;
+        }
+        
+        .signal-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 2px solid transparent;
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .signal-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            animation: pulse 3s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        .signal-card.BUY {
+            border-color: #00ff88;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3), inset 0 0 30px rgba(0, 255, 136, 0.05);
+        }
+        
+        .signal-card.SELL {
+            border-color: #ff4757;
+            box-shadow: 0 0 30px rgba(255, 71, 87, 0.3), inset 0 0 30px rgba(255, 71, 87, 0.05);
+        }
+        
+        .signal-card.WAIT {
+            border-color: #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3), inset 0 0 30px rgba(255, 215, 0, 0.05);
+        }
+        
+        .signal-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+        
+        .signal-action {
+            font-size: 3rem;
+            font-weight: 900;
+            text-align: center;
+            margin: 15px 0;
+            text-shadow: 0 0 20px currentColor;
+        }
+        
+        .signal-action.BUY { color: #00ff88; }
+        .signal-action.SELL { color: #ff4757; }
+        .signal-action.WAIT { color: #ffd700; }
+        
+        .price-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .price-item {
+            background: rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .price-item .label {
+            font-size: 0.7rem;
+            color: #a0a0a0;
+            text-transform: uppercase;
+        }
+        
+        .price-item .value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .price-item .value.entry { color: #00d9ff; }
+        .price-item .value.sl { color: #ff6b6b; }
+        .price-item .value.tp { color: #00ff88; }
+        .price-item .value.lot { color: #ffd700; }
+        
+        .indicators {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .indicators h3 {
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            color: #e94560;
+        }
+        
+        .indicator-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .indicator-row:last-child {
+            border-bottom: none;
+        }
+        
+        .indicator-name {
+            font-size: 0.85rem;
+            color: #c0c0c0;
+        }
+        
+        .indicator-value {
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        
+        .indicator-value.bullish { color: #00ff88; }
+        .indicator-value.bearish { color: #ff4757; }
+        .indicator-value.neutral { color: #ffd700; }
+        
+        .strength-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .strength-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+        
+        .strength-fill.strong { background: linear-gradient(90deg, #00ff88, #00d9ff); }
+        .strength-fill.weak { background: linear-gradient(90deg, #ff4757, #ff6b6b); }
+        .strength-fill.moderate { background: linear-gradient(90deg, #ffd700, #ffaa00); }
+        
+        .strength-label {
+            text-align: center;
+            font-size: 0.75rem;
+            margin-top: 8px;
+            color: #a0a0a0;
+        }
+        
+        .log-box {
+            background: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+        }
+        
+        .log-box h3 {
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            color: #e94560;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #b0b0b0;
+        }
+        
+        .log-entry.buy { color: #00ff88; }
+        .log-entry.sell { color: #ff4757; }
+        
+        .hidden-reset {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            opacity: 0;
+            z-index: 9999;
+        }
+        
+        .hidden-reset:hover {
+            opacity: 0.3;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid #e94560;
+            text-align: center;
+            max-width: 300px;
+        }
+        
+        .modal-content h2 {
+            color: #e94560;
+            margin-bottom: 15px;
+        }
+        
+        .modal-content p {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            margin-bottom: 20px;
+        }
+        
+        .modal-btn {
+            padding: 10px 25px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .modal-btn.confirm {
+            background: #e94560;
+            color: white;
+        }
+        
+        .modal-btn.cancel {
+            background: rgba(255,255,255,0.1);
+            color: #a0a0a0;
+        }
+        
+        .modal-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .alert-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #e94560;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: none;
+            z-index: 10001;
+            animation: slideDown 0.5s ease;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.7rem;
+            color: #666;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e94560;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 SIGNAL TRADING AUD/JPY</h1>
+            <div class="subtitle">Auto Signal M5 | Timeframe 5 Menit | WITA</div>
+        </div>
+        
+        <div class="time-box">
+            <div class="wita-time" id="witaTime">--:--:--</div>
+            <div class="session" id="marketSession">Memuat...</div>
+            <div class="countdown" id="countdown">Refresh Signal: --:--</div>
+        </div>
+        
+        <div class="signal-card WAIT" id="signalCard">
+            <div class="signal-label" id="signalLabel">ANALISIS SIGNAL</div>
+            <div class="signal-action WAIT" id="signalAction">WAIT</div>
+            <div class="price-info">
+                <div class="price-item">
+                    <div class="label">Entry</div>
+                    <div class="value entry" id="entryPrice">--.--</div>
+                </div>
+                <div class="price-item">
+                    <div class="label">Stop Loss</div>
+                    <div class="value sl" id="slPrice">--.--</div>
+                </div>
+                <div class="price-item">
+                    <div class="label">Take Profit</div>
+                    <div class="value tp" id="tpPrice">--.--</div>
+                </div>
+                <div class="price-item">
+                    <div class="label">Lot Size</div>
+                    <div class="value lot" id="lotSize">0.01</div>
+                </div>
+            </div>
+            <div class="strength-label" id="strengthLabel">Kekuatan Signal: Menunggu...</div>
+            <div class="strength-bar">
+                <div class="strength-fill" id="strengthFill" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div class="indicators">
+            <h3>📊 Indikator Teknis</h3>
+            <div class="indicator-row">
+                <span class="indicator-name">RSI (14)</span>
+                <span class="indicator-value neutral" id="rsiValue">--</span>
+            </div>
+            <div class="indicator-row">
+                <span class="indicator-name">MACD</span>
+                <span class="indicator-value neutral" id="macdValue">--</span>
+            </div>
+            <div class="indicator-row">
+                <span class="indicator-name">Trend</span>
+                <span class="indicator-value neutral" id="trendValue">--</span>
+            </div>
+            <div class="indicator-row">
+                <span class="indicator-name">Support</span>
+                <span class="indicator-value" id="supportValue" style="color: #00ff88;">--.--</span>
+            </div>
+            <div class="indicator-row">
+                <span class="indicator-name">Resistance</span>
+                <span class="indicator-value" id="resistanceValue" style="color: #ff4757;">--.--</span>
+            </div>
+        </div>
+        
+        <div class="log-box" id="logBox">
+            <h3>📝 Log Signal</h3>
+            <div id="logContent"></div>
+        </div>
+        
+        <div class="footer">
+            Signal otomatis dihasilkan oleh algoritma analisis teknikal.<br>
+            Trading melibatkan risiko. Gunakan manajemen risiko yang ketat.<br>
+            <span style="color: #e94560;">⚠️ Pastikan verifikasi signal sebelum entry</span>
+        </div>
+    </div>
+    
+    <!-- Hidden Reset Button -->
+    <button class="hidden-reset" id="hiddenReset" title="Reset Tersembunyi">●</button>
+    
+    <!-- Reset Modal -->
+    <div class="modal" id="resetModal">
+        <div class="modal-content">
+            <h2>⚠️ Reset Signal</h2>
+            <p>Anda yakin ingin mereset semua data signal dan log?</p>
+            <button class="modal-btn confirm" id="confirmReset">Ya, Reset</button>
+            <button class="modal-btn cancel" id="cancelReset">Batal</button>
+        </div>
+    </div>
+    
+    <!-- Alert Box -->
+    <div class="alert-box" id="alertBox">Signal Baru Terdeteksi!</div>
+    
+    <script>
+        // ========== KONFIGURASI ==========
+        const CONFIG = {
+            symbol: 'AUD/JPY',
+            timeframe: 'M5',
+            timezone: 'WITA',
+            refreshInterval: 5,
+            basePrice: 98.25,
+            pipValue: 0.01,
+            maxRiskPercent: 1,
+            accountBalance: 1000
+        };
+        
+        // ========== STATE ==========
+        let state = {
+            currentSignal: 'WAIT',
+            lastSignal: null,
+            signalCount: 0,
+            logs: [],
+            resetClickCount: 0,
+            lastResetClick: 0
+        };
+        
+        // ========== AUDIO ==========
+        let audioCtx = null;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        function playAlert(type) {
+            initAudio();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            if (type === 'BUY') {
+                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.2);
+            } else if (type === 'SELL') {
+                oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                oscillator.frequency.setValueAtTime(400, audioCtx.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(300, audioCtx.currentTime + 0.2);
+            } else {
+                oscillator.frequency.setValueAtTime(500, audioCtx.currentTime);
+            }
+            
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.5);
+        }
+        
+        // ========== WAKTU & SESI ==========
+        function updateTime() {
+            const now = new Date();
+            const witaTime = new Date(now.getTime() + (8 * 60 - now.getTimezoneOffset()) * 60000);
+            
+            const hours = String(witaTime.getHours()).padStart(2, '0');
+            const minutes = String(witaTime.getMinutes()).padStart(2, '0');
+            const seconds = String(witaTime.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('witaTime').textContent = `${hours}:${minutes}:${seconds} WITA`;
+            
+            const h = witaTime.getHours();
+            let session = '';
+            if (h >= 6 && h < 14) session = '🌏 Sesi Asia (06:00-14:00 WITA)';
+            else if (h >= 14 && h < 21) session = '🌍 Sesi Eropa (14:00-21:00 WITA)';
+            else if (h >= 21 || h < 6) session = '🌎 Sesi Amerika (21:00-06:00 WITA)';
+            
+            document.getElementById('marketSession').textContent = session;
+            
+            const nextRefresh = CONFIG.refreshInterval - (witaTime.getMinutes() % CONFIG.refreshInterval);
+            const refreshMin = String(nextRefresh).padStart(2, '0');
+            const refreshSec = String(60 - seconds).padStart(2, '0');
+            document.getElementById('countdown').textContent = `Refresh Signal: ${refreshMin}:${refreshSec}`;
+        }
+        
+        // ========== SIMULASI HARGA ==========
+        function simulatePrice() {
+            const volatility = 0.15;
+            const change = (Math.random() - 0.5) * volatility;
+            CONFIG.basePrice += change;
+            
+            if (CONFIG.basePrice > 99.00) CONFIG.basePrice = 99.00;
+            if (CONFIG.basePrice < 97.00) CONFIG.basePrice = 97.00;
+            
+            return CONFIG.basePrice;
+        }
+        
+        // ========== ANALISIS TEKNIS ==========
+        function analyzeMarket(price) {
+            const support1 = Math.floor(price * 100) / 100 - 0.20;
+            const support2 = support1 - 0.20;
+            const resistance1 = Math.floor(price * 100) / 100 + 0.20;
+            const resistance2 = resistance1 + 0.20;
+            
+            const rsi = Math.floor(30 + Math.random() * 40);
+            const macdValue = (Math.random() - 0.5) * 2;
+            const trend = Math.random() > 0.5 ? 1 : -1;
+            
+            let signal = 'WAIT';
+            let strength = 0;
+            let entry = 0, sl = 0, tp = 0;
+            
+            if (rsi < 40 && macdValue > 0 && trend > 0 && price <= support1 + 0.05) {
+                signal = 'BUY';
+                strength = 60 + Math.random() * 30;
+                entry = price;
+                sl = Math.max(support2, entry - 0.25);
+                tp = resistance1;
+            }
+            else if (rsi > 60 && macdValue < 0 && trend < 0 && price >= resistance1 - 0.05) {
+                signal = 'SELL';
+                strength = 60 + Math.random() * 30;
+                entry = price;
+                sl = Math.min(resistance2, entry + 0.25);
+                tp = support1;
+            }
+            else if (rsi < 35 && macdValue > 0) {
+                signal = 'BUY';
+                strength = 40 + Math.random() * 20;
+                entry = price;
+                sl = entry - 0.30;
+                tp = entry + 0.40;
+            }
+            else if (rsi > 65 && macdValue < 0) {
+                signal = 'SELL';
+                strength = 40 + Math.random() * 20;
+                entry = price;
+                sl = entry + 0.30;
+                tp = entry - 0.40;
+            }
+            
+            return {
+                signal,
+                strength: Math.min(strength, 95),
+                price,
+                rsi,
+                macd: macdValue,
+                trend: trend > 0 ? 'BULLISH' : 'BEARISH',
+                support1,
+                support2,
+                resistance1,
+                resistance2,
+                entry,
+                sl,
+                tp
+            };
+        }
+        
+        // ========== UPDATE UI ==========
+        function updateSignal(analysis) {
+            const card = document.getElementById('signalCard');
+            const action = document.getElementById('signalAction');
+            const label = document.getElementById('signalLabel');
+            
+            card.className = `signal-card ${analysis.signal}`;
+            action.className = `signal-action ${analysis.signal}`;
+            action.textContent = analysis.signal;
+            
+            if (analysis.signal === 'BUY') {
+                label.textContent = '🔥 SIGNAL BELI AKTIF';
+            } else if (analysis.signal === 'SELL') {
+                label.textContent = '🔥 SIGNAL JUAL AKTIF';
+            } else {
+                label.textContent = '⏳ MENUNGGU KONDISI';
+            }
+            
+            document.getElementById('entryPrice').textContent = analysis.entry > 0 ? analysis.entry.toFixed(2) : '--.--';
+            document.getElementById('slPrice').textContent = analysis.sl > 0 ? analysis.sl.toFixed(2) : '--.--';
+            document.getElementById('tpPrice').textContent = analysis.tp > 0 ? analysis.tp.toFixed(2) : '--.--';
+            
+            const riskAmount = CONFIG.accountBalance * (CONFIG.maxRiskPercent / 100);
+            const stopDistance = Math.abs(analysis.entry - analysis.sl);
+            const lotSize = stopDistance > 0 ? (riskAmount / (stopDistance * 1000)).toFixed(2) : '0.01';
+            document.getElementById('lotSize').textContent = lotSize;
+            
+            const fill = document.getElementById('strengthFill');
+            fill.style.width = `${analysis.strength}%`;
+            fill.className = `strength-fill ${analysis.strength > 70 ? 'strong' : analysis.strength > 40 ? 'moderate' : 'weak'}`;
+            
+            document.getElementById('strengthLabel').textContent = 
+                `Kekuatan Signal: ${analysis.strength.toFixed(0)}% ${analysis.strength > 70 ? '(KUAT)' : analysis.strength > 40 ? '(SEDANG)' : '(LEMAH)'}`;
+            
+            const rsiEl = document.getElementById('rsiValue');
+            rsiEl.textContent = `${analysis.rsi} ${analysis.rsi < 30 ? '(OVERSOLD)' : analysis.rsi > 70 ? '(OVERBOUGHT)' : ''}`;
+            rsiEl.className = `indicator-value ${analysis.rsi < 40 ? 'bullish' : analysis.rsi > 60 ? 'bearish' : 'neutral'}`;
+            
+            const macdEl = document.getElementById('macdValue');
+            macdEl.textContent = analysis.macd > 0 ? `BULLISH (+${analysis.macd.toFixed(2)})` : `BEARISH (${analysis.macd.toFixed(2)})`;
+            macdEl.className = `indicator-value ${analysis.macd > 0 ? 'bullish' : 'bearish'}`;
+            
+            const trendEl = document.getElementById('trendValue');
+            trendEl.textContent = analysis.trend;
+            trendEl.className = `indicator-value ${analysis.trend === 'BULLISH' ? 'bullish' : 'bearish'}`;
+            
+            document.getElementById('supportValue').textContent = analysis.support1.toFixed(2);
+            document.getElementById('resistanceValue').textContent = analysis.resistance1.toFixed(2);
+            
+            if (analysis.signal !== state.lastSignal && analysis.signal !== 'WAIT') {
+                state.lastSignal = analysis.signal;
+                state.signalCount++;
+                addLog(analysis);
+                playAlert(analysis.signal);
+                showAlert(`🚨 Signal ${analysis.signal} AUD/JPY @ ${analysis.price.toFixed(2)}`);
+            }
+        }
+        
+        // ========== LOG ==========
+        function addLog(analysis) {
+            const now = new Date();
+            const witaTime = new Date(now.getTime() + (8 * 60 - now.getTimezoneOffset()) * 60000);
+            const timeStr = witaTime.toTimeString().slice(0, 5);
+            
+            const logEntry = {
+                time: timeStr,
+                signal: analysis.signal,
+                price: analysis.price.toFixed(2),
+                entry: analysis.entry.toFixed(2),
+                sl: analysis.sl.toFixed(2),
+                tp: analysis.tp.toFixed(2),
+                strength: analysis.strength.toFixed(0)
+            };
+            
+            state.logs.unshift(logEntry);
+            if (state.logs.length > 20) state.logs.pop();
+            
+            renderLogs();
+        }
+        
+        function renderLogs() {
+            const container = document.getElementById('logContent');
+            container.innerHTML = state.logs.map(log => `
+                <div class="log-entry ${log.signal.toLowerCase()}">
+                    [${log.time}] ${log.signal} | ${log.price} | Entry:${log.entry} | SL:${log.sl} | TP:${log.tp} | ${log.strength}%
+                </div>
+            `).join('');
+        }
+        
+        // ========== ALERT ==========
+        function showAlert(message) {
+            const alert = document.getElementById('alertBox');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+        
+        // ========== RESET FUNCTION ==========
+        function setupReset() {
+            const resetBtn = document.getElementById('hiddenReset');
+            const modal = document.getElementById('resetModal');
+            const confirmBtn = document.getElementById('confirmReset');
+            const cancelBtn = document.getElementById('cancelReset');
+            
+            resetBtn.addEventListener('click', () => {
+                const now = Date.now();
+                if (now - state.lastResetClick > 3000) {
+                    state.resetClickCount = 1;
+                } else {
+                    state.resetClickCount++;
+                }
+                state.lastResetClick = now;
+                
+                if (state.resetClickCount >= 3) {
+                    modal.style.display = 'flex';
+                    state.resetClickCount = 0;
+                }
+            });
+            
+            confirmBtn.addEventListener('click', () => {
+                state.logs = [];
+                state.signalCount = 0;
+                state.lastSignal = null;
+                state.currentSignal = 'WAIT';
+                
+                renderLogs();
+                
+                document.getElementById('signalCard').className = 'signal-card WAIT';
+                document.getElementById('signalAction').className = 'signal-action WAIT';
+                document.getElementById('signalAction').textContent = 'WAIT';
+                document.getElementById('signalLabel').textContent = 'ANALISIS SIGNAL';
+                document.getElementById('entryPrice').textContent = '--.--';
+                document.getElementById('slPrice').textContent = '--.--';
+                document.getElementById('tpPrice').textContent = '--.--';
+                document.getElementById('strengthFill').style.width = '0%';
+                document.getElementById('strengthLabel').textContent = 'Kekuatan Signal: Menunggu...';
+                
+                modal.style.display = 'none';
+                showAlert('✅ Semua data signal telah direset!');
+            });
+            
+            cancelBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.style.display = 'none';
+            });
+        }
+        
+        // ========== MAIN LOOP ==========
+        function mainLoop() {
+            updateTime();
+            const price = simulatePrice();
+            const analysis = analyzeMarket(price);
+            updateSignal(analysis);
+        }
+        
+        // ========== INIT ==========
+        function init() {
+            setupReset();
+            mainLoop();
+            setInterval(updateTime, 1000);
+            setInterval(mainLoop, 300000);
+            setInterval(() => { simulatePrice(); }, 30000);
+            document.addEventListener('click', initAudio, { once: true });
+        }
+        
+        init();
+    </script>
+</body>
+</html>
